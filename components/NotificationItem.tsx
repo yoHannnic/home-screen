@@ -1,89 +1,59 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 
-const NotificationItem = ({ notification }) => {
-  const getIconName = (category) => {
-    switch(category) {
-      case 'event': return 'calendar';
-      case 'academic': return 'school';
-      case 'announcement': return 'megaphone';
-      default: return 'notifications';
-    }
-  };
-  
-  const getIconColor = (category) => {
-    switch(category) {
-      case 'event': return '#2C7E7B';
-      case 'academic': return '#8E44AD';
-      case 'announcement': return '#D35400';
-      default: return '#3498DB';
-    }
-  };
+const NotificationItem = ({ notification, onDelete }) => {
+  const renderRightActions = () => (
+    <TouchableOpacity style={styles.deleteButton} onPress={onDelete}>
+      <Ionicons name="trash-outline" size={22} color="#fff" />
+    </TouchableOpacity>
+  );
 
   return (
-    <TouchableOpacity 
-      style={[
-        styles.notificationItem, 
-        !notification.read && styles.unreadNotification
-      ]}
-    >
-      <View style={[styles.notificationIcon, { backgroundColor: `${getIconColor(notification.category)}20` }]}>
-        <Ionicons name={getIconName(notification.category)} size={20} color={getIconColor(notification.category)} />
+    <Swipeable renderRightActions={renderRightActions}>
+      <View style={styles.container}>
+        <Text style={styles.title}>{notification.title}</Text>
+        <Text style={styles.message}>{notification.message}</Text>
+        <Text style={styles.timestamp}>{notification.timestamp}</Text>
       </View>
-      <View style={styles.notificationContent}>
-        <Text style={styles.notificationTitle}>{notification.title}</Text>
-        <Text style={styles.notificationMessage}>{notification.message}</Text>
-        <Text style={styles.notificationTime}>{notification.time}</Text>
-      </View>
-      {!notification.read && <View style={styles.unreadDot} />}
-    </TouchableOpacity>
+    </Swipeable>
   );
 };
 
 const styles = StyleSheet.create({
-  notificationItem: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    alignItems: 'center',
+  container: {
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 1,
   },
-  unreadNotification: {
-    backgroundColor: '#F0F9FF',
-  },
-  notificationIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  notificationContent: {
-    flex: 1,
-  },
-  notificationTitle: {
-    fontSize: 15,
+  title: {
     fontWeight: '600',
-    marginBottom: 3,
+    fontSize: 15,
+    marginBottom: 4,
   },
-  notificationMessage: {
+  message: {
     fontSize: 13,
     color: '#555',
-    marginBottom: 5,
   },
-  notificationTime: {
-    fontSize: 12,
-    color: '#999',
+  timestamp: {
+    fontSize: 11,
+    color: '#888',
+    marginTop: 4,
   },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#2C7E7B',
+  deleteButton: {
+    backgroundColor: '#FF3B30',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 70,
+    borderRadius: 10,
+    marginVertical: 5,
   },
 });
 
