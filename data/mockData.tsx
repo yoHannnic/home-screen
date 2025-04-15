@@ -1,0 +1,67 @@
+export const EVENTS = [
+    {
+      id: '1',
+      title: 'CREAM Week 2023',
+      description: 'Career readiness and mentorship week with industry professionals',
+      date: 'April 17 - 25 (in 1 week)',
+      location: 'Student Center',
+      image: 'https://via.placeholder.com/100',
+      category: 'career',
+      important: true,
+    },
+    {
+      id: '2',
+      title: 'Final Exam Prep Session',
+      description: 'Group study for calculus final exam',
+      date: 'April 20 at 3:00 PM',
+      location: 'Library Room 202',
+      image: 'https://via.placeholder.com/100',
+      category: 'academic',
+      important: true,
+    },
+    {
+      id: '3',
+      title: 'Campus Spring Festival',
+      description: 'Annual celebration with music, food, and activities',
+      date: 'April 22 - 23',
+      location: 'Main Quad',
+      image: 'https://via.placeholder.com/100',
+      category: 'social',
+      important: false,
+    },
+  ];
+  
+  export const NOTIFICATIONS = [
+    {
+      id: '1',
+      title: 'CREAM Week Schedule Released',
+      message: 'Check out the full lineup of events and speakers',
+      time: '10:30 AM',
+      read: false,
+      category: 'event',
+    },
+    {
+      id: '2',
+      title: 'Assignment Due Tomorrow',
+      message: 'Don\'t forget to submit your research paper by 11:59 PM',
+      time: 'Yesterday',
+      read: true,
+      category: 'academic',
+    },
+    {
+      id: '3',
+      title: 'Campus Alert',
+      message: 'Library hours extended for finals week',
+      time: 'Apr 14',
+      read: false,
+      category: 'announcement',
+    },
+    {
+      id: '4',
+      title: 'Event Reminder',
+      message: 'Spring Festival starts tomorrow! Don\'t miss the opening ceremony.',
+      time: 'Apr 13',
+      read: true,
+      category: 'event',
+    },
+  ];
