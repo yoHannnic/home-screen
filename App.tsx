@@ -1,239 +1,119 @@
 import React, { useState } from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  SafeAreaView, 
-  TouchableOpacity,
-  StatusBar,
-  Platform
-} from 'react-native';
+import { Text, View, Platform } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 
 // Import screens
-import HomeScreen from './src/screens/HomeScreen';
-import NotificationsScreen from './src/screens/NotificationsScreen';
-import SettingsScreen from './src/screens/SettingsScreen';
+import HomeScreen from './screens/HomeScreen';
+import NotificationsScreen from './screens/NotificationsScreen';
+import SettingsScreen from './screens/SettingsScreen';
+import CalendarScreen from './screens/CalendarScreen';
 
 // Import mock data
-import { EVENTS, NOTIFICATIONS } from './src/data/mockData';
+import { EVENTS, NOTIFICATIONS } from './data/mockData';
 
-// Define types for Notifications and Settings
-interface Notification {
-  id: string;
-  message: string;
-  read: boolean;
-}
+const HomeStack = createStackNavigator();
+const NotificationsStack = createStackNavigator();
+const SettingsStack = createStackNavigator();
+const CalendarStack = createStackNavigator();
+const Tab = createBottomTabNavigator();
 
-interface NotificationSettings {
-  pushEnabled: boolean;
-  emailEnabled: boolean;
-  academicAlerts: boolean;
-  eventReminders: boolean;
-  campusAnnouncements: boolean;
-  socialNotifications: boolean;
-}
-
-export default function App() {
-  const [activeTab, setActiveTab] = useState('home');
-  const [notifications, setNotifications] = useState<Notification[]>(NOTIFICATIONS);
-  const [events, setEvents] = useState(EVENTS);
-  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
-    pushEnabled: true,
-    emailEnabled: true,
-    academicAlerts: true,
-    eventReminders: true,
-    campusAnnouncements: true,
-    socialNotifications: false,
-  });
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const markAllRead = () => {
-    setNotifications(notifications.map((n: Notification) => ({...n, read: true})));
-  };
-
-  const toggleSetting = (setting: keyof NotificationSettings) => {
-    setNotificationSettings({
-      ...notificationSettings,
-      [setting]: !notificationSettings[setting]
-    });
-  };
-
-  const renderTabContent = () => {
-    switch(activeTab) {
-      case 'home':
-        return <HomeScreen events={events} />;
-      case 'notifications':
-        return <NotificationsScreen 
-          notifications={notifications} 
-        />;
-      case 'settings':
-        return <SettingsScreen 
-          settings={notificationSettings} 
-          toggleSetting={toggleSetting} 
-        />;
-      default:
-        return <HomeScreen events={events} />;
-    }
-  };
-
+function HomeStackScreen({ route }: any) {
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>
-          {activeTab === 'home' ? 'Campus Events' : 
-           activeTab === 'notifications' ? 'Notifications' : 
-           'Settings'}
-        </Text>
-        {activeTab === 'notifications' && (
-          <TouchableOpacity onPress={markAllRead} style={styles.headerButton}>
-            <Text style={styles.headerButtonText}>Mark all read</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-      
-      {renderTabContent()}
-      
-      <View style={styles.tabBar}>
-        <TouchableOpacity 
-          style={styles.tabButton} 
-          onPress={() => setActiveTab('home')}
-        >
-          <Ionicons 
-            name={activeTab === 'home' ? 'home' : 'home-outline'} 
-            size={24} 
-            color={activeTab === 'home' ? '#2C7E7B' : '#8e8e8e'} 
-          />
-          <Text style={[styles.tabLabel, {color: activeTab === 'home' ? '#2C7E7B' : '#8e8e8e'}]}>Home</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.tabButton} 
-          onPress={() => setActiveTab('notifications')}
-        >
-          <View style={styles.iconContainer}>
-            <Ionicons 
-              name={activeTab === 'notifications' ? 'notifications' : 'notifications-outline'} 
-              size={24} 
-              color={activeTab === 'notifications' ? '#2C7E7B' : '#8e8e8e'} 
-            />
-            {unreadCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{unreadCount}</Text>
-              </View>
-            )}
-          </View>
-          <Text style={[styles.tabLabel, {color: activeTab === 'notifications' ? '#2C7E7B' : '#8e8e8e'}]}>Alerts</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.tabButton} 
-          onPress={() => setActiveTab('addEvent')}
-        >
-          <View style={styles.addButton}>
-            <Ionicons name="add" size={24} color="white" />
-          </View>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.tabButton} 
-          onPress={() => setActiveTab('calendar')}
-        >
-          <Ionicons 
-            name={activeTab === 'calendar' ? 'calendar' : 'calendar-outline'} 
-            size={24} 
-            color={activeTab === 'calendar' ? '#2C7E7B' : '#8e8e8e'} 
-          />
-          <Text style={[styles.tabLabel, {color: activeTab === 'calendar' ? '#2C7E7B' : '#8e8e8e'}]}>Calendar</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.tabButton} 
-          onPress={() => setActiveTab('settings')}
-        >
-          <Ionicons 
-            name={activeTab === 'settings' ? 'settings' : 'settings-outline'} 
-            size={24} 
-            color={activeTab === 'settings' ? '#2C7E7B' : '#8e8e8e'} 
-          />
-          <Text style={[styles.tabLabel, {color: activeTab === 'settings' ? '#2C7E7B' : '#8e8e8e'}]}>Settings</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+    <HomeStack.Navigator>
+      <HomeStack.Screen name="Home" component={HomeScreen} initialParams={{ events: route.params.events }} />
+    </HomeStack.Navigator>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    paddingTop: Platform.OS === 'android' ? Constants.statusBarHeight : 0,
-  },
-  header: {
-    backgroundColor: '#2C7E7B',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  headerButton: {
-    padding: 5,
-  },
-  headerButtonText: {
-    color: 'white',
-    fontSize: 14,
-  },
-  tabBar: {
-    flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: '#e1e1e1',
-    backgroundColor: 'white',
-  },
-  tabButton: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-  },
-  tabLabel: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  iconContainer: {
-    position: 'relative',
-  },
-  badge: {
-    position: 'absolute',
-    right: -6,
-    top: -3,
-    backgroundColor: '#FF3B30',
-    borderRadius: 7,
-    width: 14,
-    height: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badgeText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  addButton: {
-    backgroundColor: '#2C7E7B',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-});
+function NotificationsStackScreen({ route }: any) {
+  return (
+    <NotificationsStack.Navigator>
+      <NotificationsStack.Screen name="Notifications" component={NotificationsScreen} initialParams={{ notifications: route.params.notifications }} />
+    </NotificationsStack.Navigator>
+  );
+}
+
+function CalendarStackScreen() {
+  return (
+    <CalendarStack.Navigator>
+      <CalendarStack.Screen name="Calendar" component={CalendarScreen} />
+    </CalendarStack.Navigator>
+  );
+}
+
+function SettingsStackScreen() {
+  return (
+    <SettingsStack.Navigator>
+      <SettingsStack.Screen name="Settings" component={SettingsScreen} />
+    </SettingsStack.Navigator>
+  );
+}
+
+export default function App() {
+  const [notifications, setNotifications] = useState(NOTIFICATIONS);
+  const [events, setEvents] = useState(EVENTS);
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  return (
+    <NavigationContainer>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ color, size }) => {
+            let iconName: any;
+
+            if (route.name === 'Home') iconName = 'home';
+            else if (route.name === 'Alerts') iconName = 'notifications-outline';
+            else if (route.name === 'Add') iconName = 'add-circle';
+            else if (route.name === 'Calendar') iconName = 'calendar-outline';
+            else if (route.name === 'Settings') iconName = 'settings-outline';
+
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: '#2C7E7B',
+          tabBarInactiveTintColor: '#8e8e8e',
+          headerShown: false,
+        })}
+      >
+        <Tab.Screen name="Home" options={{ tabBarLabel: 'Home' }}>
+          {(props) => <HomeStackScreen {...props} route={{ ...props.route, params: { events } }} />}
+        </Tab.Screen>
+
+        <Tab.Screen
+          name="Alerts"
+          options={{
+            tabBarLabel: 'Alerts',
+            tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+          }}
+        >
+          {(props) => <NotificationsStackScreen {...props} route={{ ...props.route, params: { notifications } }} />}
+        </Tab.Screen>
+
+        <Tab.Screen
+          name="Add"
+          component={() => <View />}
+          options={{
+            tabBarLabel: '',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="add-circle" size={48} color="#2C7E7B" style={{ marginBottom: 10 }} />
+            ),
+          }}
+          listeners={{
+            tabPress: (e) => {
+              e.preventDefault();
+              console.log('Add button pressed');
+              // Show modal or navigate if needed
+            },
+          }}
+        />
+
+        <Tab.Screen name="Calendar" component={CalendarStackScreen} options={{ tabBarLabel: 'Calendar' }} />
+
+        <Tab.Screen name="Settings" component={SettingsStackScreen} options={{ tabBarLabel: 'Settings' }} />
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+}

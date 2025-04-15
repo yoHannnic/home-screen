@@ -1,11 +1,13 @@
 import React from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import PropTypes from 'prop-types';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import EventCard from '../components/EventCard';
 
-const HomeScreen = ({ events }) => {
+const HomeScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const events = route.params?.events || []; // ✅ Safe fallback to empty array
 
   return (
     <ScrollView style={styles.screenContainer}>
@@ -25,12 +27,13 @@ const HomeScreen = ({ events }) => {
   );
 };
 
+// You can still keep prop types in case you pass props instead of using route.params
 HomeScreen.propTypes = {
   events: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     })
-  ).isRequired,
+  ),
 };
 
 const styles = StyleSheet.create({
