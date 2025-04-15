@@ -19,11 +19,27 @@ import SettingsScreen from './src/screens/SettingsScreen';
 // Import mock data
 import { EVENTS, NOTIFICATIONS } from './src/data/mockData';
 
+// Define types for Notifications and Settings
+interface Notification {
+  id: string;
+  message: string;
+  read: boolean;
+}
+
+interface NotificationSettings {
+  pushEnabled: boolean;
+  emailEnabled: boolean;
+  academicAlerts: boolean;
+  eventReminders: boolean;
+  campusAnnouncements: boolean;
+  socialNotifications: boolean;
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
-  const [notifications, setNotifications] = useState(NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<Notification[]>(NOTIFICATIONS);
   const [events, setEvents] = useState(EVENTS);
-  const [notificationSettings, setNotificationSettings] = useState({
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
     pushEnabled: true,
     emailEnabled: true,
     academicAlerts: true,
@@ -35,10 +51,10 @@ export default function App() {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const markAllRead = () => {
-    setNotifications(notifications.map(n => ({...n, read: true})));
+    setNotifications(notifications.map((n: Notification) => ({...n, read: true})));
   };
 
-  const toggleSetting = (setting) => {
+  const toggleSetting = (setting: keyof NotificationSettings) => {
     setNotificationSettings({
       ...notificationSettings,
       [setting]: !notificationSettings[setting]
@@ -91,10 +107,7 @@ export default function App() {
             size={24} 
             color={activeTab === 'home' ? '#2C7E7B' : '#8e8e8e'} 
           />
-          <Text style={[
-            styles.tabLabel,
-            {color: activeTab === 'home' ? '#2C7E7B' : '#8e8e8e'}
-          ]}>Home</Text>
+          <Text style={[styles.tabLabel, {color: activeTab === 'home' ? '#2C7E7B' : '#8e8e8e'}]}>Home</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
@@ -113,10 +126,7 @@ export default function App() {
               </View>
             )}
           </View>
-          <Text style={[
-            styles.tabLabel,
-            {color: activeTab === 'notifications' ? '#2C7E7B' : '#8e8e8e'}
-          ]}>Alerts</Text>
+          <Text style={[styles.tabLabel, {color: activeTab === 'notifications' ? '#2C7E7B' : '#8e8e8e'}]}>Alerts</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
@@ -137,10 +147,7 @@ export default function App() {
             size={24} 
             color={activeTab === 'calendar' ? '#2C7E7B' : '#8e8e8e'} 
           />
-          <Text style={[
-            styles.tabLabel,
-            {color: activeTab === 'calendar' ? '#2C7E7B' : '#8e8e8e'}
-          ]}>Calendar</Text>
+          <Text style={[styles.tabLabel, {color: activeTab === 'calendar' ? '#2C7E7B' : '#8e8e8e'}]}>Calendar</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
@@ -152,10 +159,7 @@ export default function App() {
             size={24} 
             color={activeTab === 'settings' ? '#2C7E7B' : '#8e8e8e'} 
           />
-          <Text style={[
-            styles.tabLabel,
-            {color: activeTab === 'settings' ? '#2C7E7B' : '#8e8e8e'}
-          ]}>Settings</Text>
+          <Text style={[styles.tabLabel, {color: activeTab === 'settings' ? '#2C7E7B' : '#8e8e8e'}]}>Settings</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
