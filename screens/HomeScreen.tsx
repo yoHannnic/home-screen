@@ -1,16 +1,31 @@
 import React from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
-import PropTypes from 'prop-types';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import EventCard from '../components/EventCard';
 import PostCard from '../components/PostCard'; // Assuming you have this
+
+// Define types for the event and post objects
+interface Event {
+  id: number;
+  title: string;
+  date: string;
+  location: string;
+}
+
+interface Post {
+  id: number;
+  title: string;
+  body: string;
+  date: string;
+}
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
 
-  const events = route.params?.events || [];
-  const posts = route.params?.posts || [];
+  // Use type definitions for the events and posts arrays
+  const events: Event[] = route.params?.events || [];
+  const posts: Post[] = route.params?.posts || [];
 
   return (
     <ScrollView style={styles.screenContainer}>
@@ -26,7 +41,7 @@ const HomeScreen = () => {
         <Text style={styles.emptyText}>No upcoming events at the moment.</Text>
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
-          {events.map(event => (
+          {events.map((event) => (
             <EventCard key={event.id} event={event} />
           ))}
         </ScrollView>
@@ -39,17 +54,12 @@ const HomeScreen = () => {
       {posts.length === 0 ? (
         <Text style={styles.emptyText}>No posts available.</Text>
       ) : (
-        posts.map(post => (
+        posts.map((post) => (
           <PostCard key={post.id} post={post} />
         ))
       )}
     </ScrollView>
   );
-};
-
-HomeScreen.propTypes = {
-  events: PropTypes.array,
-  posts: PropTypes.array,
 };
 
 const styles = StyleSheet.create({
