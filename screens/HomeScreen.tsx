@@ -3,14 +3,18 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-nati
 import PropTypes from 'prop-types';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import EventCard from '../components/EventCard';
+import PostCard from '../components/PostCard'; // Assuming you have this
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const events = route.params?.events || []; // ✅ Safe fallback to empty array
+
+  const events = route.params?.events || [];
+  const posts = route.params?.posts || [];
 
   return (
     <ScrollView style={styles.screenContainer}>
+      {/* Upcoming Events Section */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Upcoming Events</Text>
         <TouchableOpacity onPress={() => navigation.navigate('AllEvents')}>
@@ -21,19 +25,31 @@ const HomeScreen = () => {
       {events.length === 0 ? (
         <Text style={styles.emptyText}>No upcoming events at the moment.</Text>
       ) : (
-        events.map(event => <EventCard key={event.id} event={event} />)
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
+          {events.map(event => (
+            <EventCard key={event.id} event={event} />
+          ))}
+        </ScrollView>
+      )}
+
+      {/* Posts Section */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Posts</Text>
+      </View>
+      {posts.length === 0 ? (
+        <Text style={styles.emptyText}>No posts available.</Text>
+      ) : (
+        posts.map(post => (
+          <PostCard key={post.id} post={post} />
+        ))
       )}
     </ScrollView>
   );
 };
 
-// You can still keep prop types in case you pass props instead of using route.params
 HomeScreen.propTypes = {
-  events: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    })
-  ),
+  events: PropTypes.array,
+  posts: PropTypes.array,
 };
 
 const styles = StyleSheet.create({
@@ -64,6 +80,9 @@ const styles = StyleSheet.create({
     marginTop: 50,
     fontSize: 16,
     color: '#999',
+  },
+  horizontalScroll: {
+    paddingHorizontal: 20,
   },
 });
 
