@@ -1,210 +1,204 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+// screens/NotificationsScreen.tsx
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
   View,
-  ScrollView,
-  SafeAreaView,
-  RefreshControl,
+  FlatList,
   TouchableOpacity,
-  Animated,
+  SectionList,
 } from 'react-native';
-import NotificationItem from '../components/NotificationItem';
-import { groupNotificationsByDate } from '../utils/groupNotifications';
+import { useRoute } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { groupNotifications, formatNotificationTime } from '../utils/groupNotifications';
 
-const NotificationsScreen = ({ notifications: initialNotifications = [] }) => {
-  const [notifications, setNotifications] = useState(initialNotifications);
-  const [refreshing, setRefreshing] = useState(false);
-  const [recentlyDeleted, setRecentlyDeleted] = useState(null);
+interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  date: string;
+  read: boolean;
+}
 
-  const slideAnim = useRef(new Animated.Value(100)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
+interface GroupedNotifications {
+  title: string;
+  data: Notification[];
+}
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      // Simulate refreshing data
-      setRefreshing(false);
-    }, 1000);
-  }, []);
+const NotificationsScreen = () => {
+  const route = useRoute();
+  const [notifications, setNotifications] = useState<Notification[]>(
+    route.params?.notifications || []
+  );
 
-  const handleDelete = (notification) => {
-    setNotifications(prev => prev.filter(n => n.id !== notification.id));
-    setRecentlyDeleted(notification);
-    showSnackbar();
-
-    // Auto-clear undo after 5s
-    setTimeout(() => {
-      hideSnackbar();
-      setRecentlyDeleted(null);
-    }, 5000);
-  };
-
-  const handleUndo = () => {
-    if (recentlyDeleted) {
-      setNotifications(prev => [recentlyDeleted, ...prev]);
-      setRecentlyDeleted(null);
-      hideSnackbar();
+  // Process notifications into sections
+  const getGroupedNotifications = (): GroupedNotifications[] => {
+    const groups = groupNotifications(notifications);
+    
+    const sections: GroupedNotifications[] = [];
+    
+    if (groups.today.length > 0) {
+      sections.push({ title: 'Today', data: groups.today });
     }
+    
+    if (groups.yesterday.length > 0) {
+      sections.push({ title: 'Yesterday', data: groups.yesterday });
+    }
+    
+    if (groups.thisWeek.length > 0) {
+      sections.push({ title: 'This Week', data: groups.thisWeek });
+    }
+    
+    if (groups.earlier.length > 0) {
+      sections.push({ title: 'Earlier', data: groups.earlier });
+    }
+    
+    return sections;
   };
 
-  const showSnackbar = () => {
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start();
+  // Mark a notification as read
+  const markAsRead = (id: number) => {
+    setNotifications(
+      notifications.map((notification) =>
+        notification.id === id
+          ? { ...notification, read: true }
+          : notification
+      )
+    );
   };
 
-  const hideSnackbar = () => {
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: 100,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start();
+  // Render notification item
+  const renderNotificationItem = ({ item }: { item: Notification }) => {
+    return (
+      <TouchableOpacity
+        style={[
+          styles.notificationItem,
+          !item.read && styles.unreadNotification,
+        ]}
+        onPress={() => markAsRead(item.id)}
+      >
+        <View style={styles.notificationContent}>
+          <Text style={styles.notificationTitle}>{item.title}</Text>
+          <Text style={styles.notificationMessage}>{item.message}</Text>
+        </View>
+        <View style={styles.notificationMeta}>
+          <Text style={styles.notificationTime}>
+            {formatNotificationTime(item.date)}
+          </Text>
+          {!item.read && <View style={styles.unreadDot} />}
+        </View>
+      </TouchableOpacity>
+    );
   };
 
-  const grouped = groupNotificationsByDate(notifications);
+  // Render section header
+  const renderSectionHeader = ({
+    section,
+  }: {
+    section: GroupedNotifications;
+  }) => (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>{section.title}</Text>
+    </View>
+  );
+
+  // Empty notifications component
+  const EmptyNotifications = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="notifications-off-outline" size={60} color="#ccc" />
+      <Text style={styles.emptyText}>No notifications yet</Text>
+    </View>
+  );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        style={styles.screenContainer}
-        contentContainerStyle={styles.contentContainer}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Notifications</Text>
-          <Text style={styles.sectionSubtitle}>{notifications.length} total</Text>
-        </View>
-
-        {notifications.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>You're all caught up! 🎉</Text>
-          </View>
-        ) : (
-          Object.entries(grouped).map(([label, group]) => (
-            <View key={label} style={styles.groupSection}>
-              <Text style={styles.groupLabel}>{label}</Text>
-              {group.map(notification => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                  onDelete={() => handleDelete(notification)}
-                />
-              ))}
-            </View>
-          ))
-        )}
-      </ScrollView>
-
-      {/* Snackbar Animated View */}
-      {recentlyDeleted && (
-        <Animated.View
-          style={[
-            styles.snackbar,
-            {
-              transform: [{ translateY: slideAnim }],
-              opacity: opacityAnim,
-            },
-          ]}
-        >
-          <Text style={styles.undoText}>Notification deleted</Text>
-          <TouchableOpacity onPress={handleUndo}>
-            <Text style={styles.undoButton}>Undo</Text>
-          </TouchableOpacity>
-        </Animated.View>
+    <View style={styles.container}>
+      {notifications.length === 0 ? (
+        <EmptyNotifications />
+      ) : (
+        <SectionList
+          sections={getGroupedNotifications()}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderNotificationItem}
+          renderSectionHeader={renderSectionHeader}
+          stickySectionHeadersEnabled={true}
+          contentContainerStyle={styles.listContent}
+        />
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: '#F9F9F9',
   },
-  screenContainer: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingBottom: 100,
+  listContent: {
+    paddingBottom: 20,
   },
   sectionHeader: {
+    backgroundColor: '#F9F9F9',
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#FFF',
-    borderBottomColor: '#EEE',
+    paddingVertical: 10,
     borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1C1C1E',
-  },
-  sectionSubtitle: {
-    fontSize: 13,
-    color: '#888',
-    marginTop: 4,
-  },
-  groupSection: {
-    paddingHorizontal: 20,
-    marginTop: 10,
-  },
-  groupLabel: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#444',
+    color: '#8E8E8E',
+  },
+  notificationItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  unreadNotification: {
+    backgroundColor: '#F0F7F7',
+  },
+  notificationContent: {
+    flex: 1,
+    paddingRight: 15,
+  },
+  notificationTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 5,
+    color: '#333333',
+  },
+  notificationMessage: {
+    fontSize: 14,
+    color: '#666666',
+  },
+  notificationMeta: {
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    paddingVertical: 2,
+  },
+  notificationTime: {
+    fontSize: 13,
+    color: '#999999',
     marginBottom: 5,
   },
-  emptyState: {
-    marginTop: 40,
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#2C7E7B',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   emptyText: {
+    marginTop: 15,
     fontSize: 16,
-    color: '#777',
-  },
-  snackbar: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-    backgroundColor: '#323232',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    zIndex: 999,
-    elevation: 5,
-  },
-  undoText: {
-    color: '#fff',
-    fontSize: 14,
-  },
-  undoButton: {
-    color: '#4CD964',
-    fontWeight: '600',
-    fontSize: 14,
-    paddingLeft: 16,
+    color: '#999999',
   },
 });
 

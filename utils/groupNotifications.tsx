@@ -1,41 +1,57 @@
+// utils/groupNotifications.tsx
 import dayjs from 'dayjs';
-import isToday from 'dayjs/plugin/isToday';
-import isYesterday from 'dayjs/plugin/isYesterday';
 
-dayjs.extend(isToday);
-dayjs.extend(isYesterday);
+interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  date: string;
+  read: boolean;
+}
 
-// Define types for the notifications and groupings
-type Notification = {
-  timestamp: string; // Assuming the timestamp is a string, adjust if it's a Date object
-  // Add other properties for the notification as needed
-};
+// Function to group notifications by date section (Today, Yesterday, This Week, Earlier)
+export const groupNotifications = (notifications: Notification[]) => {
+  const today = dayjs().startOf('day');
+  const yesterday = today.subtract(1, 'day');
+  const weekStart = today.subtract(6, 'day');
+  
+  const groups = {
+    today: [] as Notification[],
+    yesterday: [] as Notification[],
+    thisWeek: [] as Notification[],
+    earlier: [] as Notification[],
+  };
 
-type GroupedNotifications = {
-  [key: string]: Notification[];
-};
-
-export const groupNotificationsByDate = (notifications: Notification[]): GroupedNotifications => {
-  const groups: GroupedNotifications = {};
-
-  // Early return if no notifications
-  if (notifications.length === 0) return groups;
-
-  notifications.forEach((notif) => {
-    const date = dayjs(notif.timestamp);
-    let label = 'Earlier'; // Default label
-
-    if (date.isToday()) {
-      label = 'Today';
-    } else if (date.isYesterday()) {
-      label = 'Yesterday';
+  notifications.forEach(notification => {
+    const notificationDate = dayjs(notification.date);
+    
+    if (notificationDate.isSame(today, 'day')) {
+      groups.today.push(notification);
+    } else if (notificationDate.isSame(yesterday, 'day')) {
+      groups.yesterday.push(notification);
+    } else if (notificationDate.isAfter(weekStart)) {
+      groups.thisWeek.push(notification);
+    } else {
+      groups.earlier.push(notification);
     }
-
-    if (!groups[label]) {
-      groups[label] = [];
-    }
-    groups[label].push(notif);
   });
 
   return groups;
+};
+
+// Format notification time based on the date
+export const formatNotificationTime = (date: string) => {
+  const notificationDate = dayjs(date);
+  const today = dayjs().startOf('day');
+  const yesterday = today.subtract(1, 'day');
+  
+  if (notificationDate.isSame(today, 'day')) {
+    return notificationDate.format('h:mm A');
+  } else if (notificationDate.isSame(yesterday, 'day')) {
+    return 'Yesterday';
+  } else if (notificationDate.isAfter(today.subtract(7, 'day'))) {
+    return notificationDate.format('dddd');
+  } else {
+    return notificationDate.format('MMM D');
+  }
 };
