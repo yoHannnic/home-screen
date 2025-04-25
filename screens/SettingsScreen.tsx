@@ -4,7 +4,21 @@ import SettingItem from '../components/SettingItem';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import PropTypes from 'prop-types';
 
-const SettingsScreen = ({ settings = {}, toggleSetting }) => {
+interface Settings {
+  pushEnabled: boolean;
+  emailEnabled: boolean;
+  academicAlerts: boolean;
+  eventReminders: boolean;
+  campusAnnouncements: boolean;
+  socialNotifications: boolean;
+}
+
+interface SettingsScreenProps {
+  settings: Settings;
+  toggleSetting: (setting: keyof Settings) => void;
+}
+
+const SettingsScreen: React.FC<SettingsScreenProps> = ({ settings = {}, toggleSetting }) => {
   const {
     pushEnabled = false,
     emailEnabled = false,
@@ -82,7 +96,7 @@ SettingsScreen.propTypes = {
     eventReminders: PropTypes.bool,
     campusAnnouncements: PropTypes.bool,
     socialNotifications: PropTypes.bool,
-  }),
+  }).isRequired,
   toggleSetting: PropTypes.func.isRequired,
 };
 
