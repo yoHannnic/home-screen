@@ -1,16 +1,7 @@
 import React from 'react';
-import { View, Text, Switch, StyleSheet, ReactNode } from 'react-native';
+import { View, Text, Switch, StyleSheet } from 'react-native';
 
-// Define the types for the props
-type SettingItemProps = {
-  title: string;
-  description: string;
-  value: boolean;
-  onToggle: (value: boolean) => void;
-  icon?: ReactNode; // Icon is optional, so we can use ReactNode type
-};
-
-const SettingItem: React.FC<SettingItemProps> = ({ title, description, value, onToggle, icon }) => {
+const SettingItem = ({ title, description, value, onToggle, icon }) => {
   return (
     <View style={styles.settingItemContainer}>
       {icon}
