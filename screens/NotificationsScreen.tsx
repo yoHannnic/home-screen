@@ -1,205 +1,130 @@
-// screens/NotificationsScreen.tsx
-import React, { useState, useEffect } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  TouchableOpacity,
-  SectionList,
-} from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import React, { useContext } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { groupNotifications, formatNotificationTime } from '../utils/groupNotifications';
+import { AppContext } from '../App'; // Import the context
 
-interface Notification {
-  id: number;
-  title: string;
-  message: string;
-  date: string;
-  read: boolean;
-}
+export default function NotificationsScreen() {
+  // Get notifications from context
+  const { notifications, setNotifications } = useContext(AppContext);
 
-interface GroupedNotifications {
-  title: string;
-  data: Notification[];
-}
-
-const NotificationsScreen = () => {
-  const route = useRoute();
-  const [notifications, setNotifications] = useState<Notification[]>(
-    route.params?.notifications || []
-  );
-
-  // Process notifications into sections
-  const getGroupedNotifications = (): GroupedNotifications[] => {
-    const groups = groupNotifications(notifications);
-    
-    const sections: GroupedNotifications[] = [];
-    
-    if (groups.today.length > 0) {
-      sections.push({ title: 'Today', data: groups.today });
-    }
-    
-    if (groups.yesterday.length > 0) {
-      sections.push({ title: 'Yesterday', data: groups.yesterday });
-    }
-    
-    if (groups.thisWeek.length > 0) {
-      sections.push({ title: 'This Week', data: groups.thisWeek });
-    }
-    
-    if (groups.earlier.length > 0) {
-      sections.push({ title: 'Earlier', data: groups.earlier });
-    }
-    
-    return sections;
-  };
-
-  // Mark a notification as read
-  const markAsRead = (id: number) => {
+  // Mark notification as read
+  const markAsRead = (id) => {
     setNotifications(
-      notifications.map((notification) =>
-        notification.id === id
-          ? { ...notification, read: true }
-          : notification
+      notifications.map(notification => 
+        notification.id === id ? { ...notification, read: true } : notification
       )
     );
   };
 
-  // Render notification item
-  const renderNotificationItem = ({ item }: { item: Notification }) => {
-    return (
-      <TouchableOpacity
-        style={[
-          styles.notificationItem,
-          !item.read && styles.unreadNotification,
-        ]}
-        onPress={() => markAsRead(item.id)}
-      >
-        <View style={styles.notificationContent}>
-          <Text style={styles.notificationTitle}>{item.title}</Text>
-          <Text style={styles.notificationMessage}>{item.message}</Text>
-        </View>
-        <View style={styles.notificationMeta}>
-          <Text style={styles.notificationTime}>
-            {formatNotificationTime(item.date)}
-          </Text>
-          {!item.read && <View style={styles.unreadDot} />}
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  // Render section header
-  const renderSectionHeader = ({
-    section,
-  }: {
-    section: GroupedNotifications;
-  }) => (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{section.title}</Text>
-    </View>
-  );
-
-  // Empty notifications component
-  const EmptyNotifications = () => (
-    <View style={styles.emptyContainer}>
-      <Ionicons name="notifications-off-outline" size={60} color="#ccc" />
-      <Text style={styles.emptyText}>No notifications yet</Text>
-    </View>
+  const renderItem = ({ item }) => (
+    <TouchableOpacity 
+      style={[styles.notificationItem, !item.read && styles.unreadNotification]}
+      onPress={() => markAsRead(item.id)}
+    >
+      <View style={styles.iconContainer}>
+        <Ionicons 
+          name={item.icon || 'notifications-outline'} 
+          size={24} 
+          color="#2C7E7B" 
+        />
+      </View>
+      <View style={styles.contentContainer}>
+        <Text style={styles.notificationTitle}>{item.title}</Text>
+        <Text style={styles.notificationMessage}>{item.message}</Text>
+        <Text style={styles.notificationTime}>{item.time}</Text>
+      </View>
+      {!item.read && <View style={styles.unreadDot} />}
+    </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
       {notifications.length === 0 ? (
-        <EmptyNotifications />
+        <View style={styles.emptyContainer}>
+          <Ionicons name="notifications-off-outline" size={64} color="#CCCCCC" />
+          <Text style={styles.emptyText}>No notifications</Text>
+        </View>
       ) : (
-        <SectionList
-          sections={getGroupedNotifications()}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderNotificationItem}
-          renderSectionHeader={renderSectionHeader}
-          stickySectionHeadersEnabled={true}
-          contentContainerStyle={styles.listContent}
+        <FlatList
+          data={notifications}
+          renderItem={renderItem}
+          keyExtractor={item => item.id.toString()}
+          contentContainerStyle={styles.listContainer}
         />
       )}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
+    backgroundColor: '#FFFFFF',
   },
-  listContent: {
-    paddingBottom: 20,
-  },
-  sectionHeader: {
-    backgroundColor: '#F9F9F9',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#8E8E8E',
+  listContainer: {
+    padding: 15,
   },
   notificationItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: 'white',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    position: 'relative',
   },
   unreadNotification: {
-    backgroundColor: '#F0F7F7',
+    backgroundColor: '#F0FFFF',
   },
-  notificationContent: {
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E0F2F1',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  contentContainer: {
     flex: 1,
-    paddingRight: 15,
   },
   notificationTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 5,
     color: '#333333',
+    marginBottom: 4,
   },
   notificationMessage: {
     fontSize: 14,
     color: '#666666',
-  },
-  notificationMeta: {
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    paddingVertical: 2,
+    marginBottom: 6,
   },
   notificationTime: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#999999',
-    marginBottom: 5,
   },
   unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: '#2C7E7B',
+    position: 'absolute',
+    top: 15,
+    right: 15,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
   emptyText: {
-    marginTop: 15,
     fontSize: 16,
     color: '#999999',
+    marginTop: 10,
   },
 });
-
-export default NotificationsScreen;

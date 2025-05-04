@@ -1,5 +1,5 @@
-// App.js - Updated with Create Post Modal
-import React, { useState, useRef } from 'react';
+// App.js - Updated with Create Post Modal and HomeScreen integration
+import React, { useState, useRef, useEffect, createContext } from 'react';
 import { Text, View, Platform, Modal, TouchableOpacity, TextInput, Image, StyleSheet, ScrollView, Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -18,34 +18,32 @@ import CalendarScreen from './screens/CalendarScreen';
 // Import mock data
 import { EVENTS, NOTIFICATIONS } from './data/mockData';
 
+// Create context for app data
+export const AppContext = createContext(null);
+
 const HomeStack = createStackNavigator();
 const NotificationsStack = createStackNavigator();
 const SettingsStack = createStackNavigator();
 const CalendarStack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-function HomeStackScreen({ route, navigation }: any) {
+function HomeStackScreen() {
   return (
     <HomeStack.Navigator>
       <HomeStack.Screen 
         name="Home" 
-        component={HomeScreen} 
-        initialParams={{ 
-          events: route.params.events,
-          posts: route.params.posts
-        }} 
+        component={HomeScreen}
       />
     </HomeStack.Navigator>
   );
 }
 
-function NotificationsStackScreen({ route }: any) {
+function NotificationsStackScreen() {
   return (
     <NotificationsStack.Navigator>
       <NotificationsStack.Screen 
         name="Notifications" 
-        component={NotificationsScreen} 
-        initialParams={{ notifications: route.params.notifications }} 
+        component={NotificationsScreen}
       />
     </NotificationsStack.Navigator>
   );
@@ -78,6 +76,19 @@ export default function App() {
   const [newPostTitle, setNewPostTitle] = useState('');
   const [newPostBody, setNewPostBody] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
+  
+  // Reference to the navigation object
+  const navigationRef = React.useRef(null);
+  
+  // Create context value with data and setter functions
+  const contextValue = {
+    posts,
+    setPosts,
+    events,
+    setEvents,
+    notifications,
+    setNotifications
+  };
 
   // Function to pick an image from the device gallery
   const pickImage = async () => {
@@ -115,49 +126,65 @@ export default function App() {
       image: selectedImage
     };
 
-    setPosts([newPost, ...posts]);
+    // Update posts state with the new post at the beginning of the array
+    setPosts(prevPosts => [newPost, ...prevPosts]);
     
     // Reset form fields
     setNewPostTitle('');
     setNewPostBody('');
     setSelectedImage(null);
     setModalVisible(false);
+    
+    // Navigate to Home after posting to see the new post
+    if (navigationRef.current) {
+      navigationRef.current.navigate('Home');
+    }
+    
+    // Show confirmation
+    Alert.alert(
+      "Success",
+      "Post created successfully!",
+      [{ text: "OK" }],
+      { cancelable: true }
+    );
   };
 
   return (
     <View style={{ flex: 1 }}>
-      <NavigationContainer>
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            tabBarIcon: ({ color, size }) => {
-              let iconName;
+      <AppContext.Provider value={contextValue}>
+        <NavigationContainer ref={navigationRef}>
+          <Tab.Navigator
+            screenOptions={({ route }) => ({
+              tabBarIcon: ({ color, size }) => {
+                let iconName;
 
-              if (route.name === 'Home') iconName = 'home';
-              else if (route.name === 'Alerts') iconName = 'notifications-outline';
-              else if (route.name === 'Add') iconName = 'add-circle';
-              else if (route.name === 'Calendar') iconName = 'calendar-outline';
-              else if (route.name === 'Settings') iconName = 'settings-outline';
+                if (route.name === 'Home') iconName = 'home';
+                else if (route.name === 'Alerts') iconName = 'notifications-outline';
+                else if (route.name === 'Add') iconName = 'add-circle';
+                else if (route.name === 'Calendar') iconName = 'calendar-outline';
+                else if (route.name === 'Settings') iconName = 'settings-outline';
 
-              return <Ionicons name={iconName} size={size} color={color} />;
-            },
-            tabBarActiveTintColor: '#2C7E7B',
-            tabBarInactiveTintColor: '#8e8e8e',
-            headerShown: false,
-          })}
-        >
-          <Tab.Screen name="Home" options={{ tabBarLabel: 'Home' }}>
-            {(props) => <HomeStackScreen {...props} route={{ ...props.route, params: { events, posts } }} />}
-          </Tab.Screen>
-
-          <Tab.Screen
-            name="Alerts"
-            options={{
-              tabBarLabel: 'Alerts',
-              tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
-            }}
+                return <Ionicons name={iconName} size={size} color={color} />;
+              },
+              tabBarActiveTintColor: '#2C7E7B',
+              tabBarInactiveTintColor: '#8e8e8e',
+              headerShown: false,
+            })}
           >
-            {(props) => <NotificationsStackScreen {...props} route={{ ...props.route, params: { notifications } }} />}
-          </Tab.Screen>
+            <Tab.Screen 
+              name="Home" 
+              component={HomeStackScreen}
+              options={{ tabBarLabel: 'Home' }}
+            />
+
+            <Tab.Screen
+              name="Alerts"
+              component={NotificationsStackScreen}
+              options={{
+                tabBarLabel: 'Alerts',
+                tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+              }}
+            />
 
           <Tab.Screen
             name="Add"
@@ -176,11 +203,20 @@ export default function App() {
             }}
           />
 
-          <Tab.Screen name="Calendar" component={CalendarStackScreen} options={{ tabBarLabel: 'Calendar' }} />
+          <Tab.Screen 
+            name="Calendar" 
+            component={CalendarStackScreen} 
+            options={{ tabBarLabel: 'Calendar' }} 
+          />
 
-          <Tab.Screen name="Settings" component={SettingsStackScreen} options={{ tabBarLabel: 'Settings' }} />
+          <Tab.Screen 
+            name="Settings" 
+            component={SettingsStackScreen} 
+            options={{ tabBarLabel: 'Settings' }} 
+          />
         </Tab.Navigator>
       </NavigationContainer>
+      </AppContext.Provider>
 
       {/* Create Post Modal */}
       <Modal
